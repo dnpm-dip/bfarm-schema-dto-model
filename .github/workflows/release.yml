@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  packages: write
+  contents: write
+  pull-requests: write
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout
+        if: steps.release.outputs.releases_created == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        if: steps.release.outputs.releases_created == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Setup sbt launcher
+        if: steps.release.outputs.releases_created == 'true'
+        uses: sbt/setup-sbt@v1
+
+      - name: Publish Base DTOs
+        if: steps.release.outputs['base--release_created'] == 'true'
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}  
+          BASE_MODEL_VERSION: ${{ steps.release.outputs['base--major'] }}.${{ steps.release.outputs['base--minor'] }}.${{ steps.release.outputs['base--patch'] }}    
+        run: sbt base/publish
+
+      - name: Publish Oncology DTOs
+        if: steps.release.outputs['oncology--release_created'] == 'true'
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}  
+          ONCOLOGY_MODEL_VERSION: ${{ steps.release.outputs['oncology--major'] }}.${{ steps.release.outputs['oncology--minor'] }}.${{ steps.release.outputs['oncology--patch'] }}
+        run: sbt oncology/publish
+
+      - name: Publish Rare Diseases DTOs
+        if: steps.release.outputs['rare_diseases--release_created'] == 'true'
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}  
+          RD_MODEL_VERSION: ${{ steps.release.outputs['rare_diseases--major'] }}.${{ steps.release.outputs['rare_diseases--minor'] }}.${{ steps.release.outputs['rare_diseases--patch'] }}
+        run: sbt rare_diseases/publish

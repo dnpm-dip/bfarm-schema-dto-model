@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "packages": { 
+    "base": {
+      "component": "dnpm-bfarm-model-base"
+    },
+    "oncology": {
+      "component": "dnpm-bfarm-model-oncology"
+    },
+    "rare_diseases": {
+      "component": "dnpm-bfarm-model-rare-disease"
+    }
+  }
+}

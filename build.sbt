@@ -4,11 +4,11 @@ import scala.util.Properties.envOrElse
 name := "dnpm-bfarm-model"  // Central Clinical Data Node
 ThisBuild / organization := "de.dnpm"
 ThisBuild / scalaVersion := "2.13.18"
-ThisBuild / version      := envOrElse("VERSION","1.0.0")
+//ThisBuild / version      := envOrElse("VERSION","1.0.0")
 
-//val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/central-data-node").split("/")
-//ThisBuild / githubOwner      := ownerRepo(0)
-//ThisBuild / githubRepository := ownerRepo(1)
+val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/bfram-schema-dto-model").split("/")
+ThisBuild / githubOwner      := ownerRepo(0)
+ThisBuild / githubRepository := ownerRepo(1)
 
 
 //-----------------------------------------------------------------------------
@@ -32,6 +32,7 @@ lazy val global = project
 lazy val base = project
   .settings(
     name := "dnpm-bfarm-model-base",
+    version := envOrElse("BASE_MODEL_VERSION","1.0.0-SNAPSHOT"),
     settings,
     libraryDependencies ++= Seq(
       dependencies.scalatest,
@@ -46,12 +47,15 @@ lazy val generators = project
     libraryDependencies ++= Seq(
       dependencies.service_base,
       dependencies.generators
-    )
+    ),
+    // Only required for tests, so no need to publish/release
+    publish / skip := true
   )
 
 lazy val oncology = project
   .settings(
     name := "dnpm-bfarm-model-oncology",
+    version := envOrElse("ONCOLOGY_MODEL_VERSION","1.0.0-SNAPSHOT"),
     settings,
     libraryDependencies ++= Seq(
       dependencies.scalatest,
@@ -73,6 +77,7 @@ lazy val oncology = project
 lazy val rare_diseases = project
   .settings(
     name := "dnpm-bfarm-model-rare-disease",
+    version := envOrElse("RD_MODEL_VERSION","1.0.0-SNAPSHOT"),
     settings,
     libraryDependencies ++= Seq(
       dependencies.scalatest,
