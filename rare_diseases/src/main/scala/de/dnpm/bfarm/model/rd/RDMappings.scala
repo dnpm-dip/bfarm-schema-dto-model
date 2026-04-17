@@ -70,6 +70,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
           .flatMap(_.familyControlLevel.map(_.code.enumValue))
           .max
           .mapTo[Diagnosis.Extent.Value],
+        performedSequencingType(record),
         record.diagnoses.toList
           .map(_.verificationStatus.code.enumValue)  
           .maxOption
@@ -77,8 +78,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
           .mapTo[Diagnosis.Status.Value],
         record.diagnoses.flatMap(_.codes),
         Option.when(record.diagnoses.exists(_.missingCodeReason.isDefined))(true),
-        record.gmfcsStatus.flatMap(_.minByOption(_.effectiveDate)).map(_.value.code),
-        performedSequencingType(record)
+        record.gmfcsStatus.flatMap(_.minByOption(_.effectiveDate)).map(_.value.code)
       )
 
 

@@ -59,11 +59,11 @@ object RDCase
     symptomOnsetDate: YearMonth,
     molecularBoardDecisionDate: LocalDate,
     diagnosticExtent: Diagnosis.Extent.Value,
+    libraryType: LibraryType.Value,
     diagnosticAssessment: Diagnosis.Status.Value,
     diagnoses: NonEmptyList[Coding[RDDiagnosis.Systems]],
     noMatchingCodeExists: Option[Boolean],
     diagnosisGmfcs: Option[Code[GMFCS.Value]],
-    libraryType: LibraryType.Value
   )
 
 
