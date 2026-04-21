@@ -57,6 +57,13 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
   protected implicit def oncoDiagnosis: MTBPatientRecord => OncologyCase.Diagnosis = {
 
+    val tnmVersions = 
+      Map(
+        Coding.System[TumorStaging.TNM.UICC].uri -> "8th ed.",
+        Coding.System[TumorStaging.TNM.AJCC].uri -> "8th ed."
+      )
+
+
     record =>
 
       val diagnoses = record.diagnoses.toList
@@ -117,16 +124,10 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
                 coding => coding.copy(
                   display = coding.display.orElse(Some(coding.code.value)),
                   /**
-                   * Version added as a (temporary) hack, because it is required even though
-                   * no unified value set of versions has been defined, e.g.:
-                   * Should UICC 8th edition be given as (UICC itself already being defined in Coding.system)
-                   * - "8th ed."
-                   * - "8th edition"
-                   * - "UICC TNM Classification (8th ed.). 2016"
-                   * - "2016"
-                   * (see https://en.wikipedia.org/wiki/TNM_staging_system#Versions)
+                   * Version default value added as a (temporary) hack, because it is required even though
+                   * no unified value set of versions has been defined
                    */
-                  version = coding.version.orElse(Some("8th ed."))
+                  version = coding.version.orElse(tnmVersions.get(coding.system))
                 )
               )
           },
@@ -568,7 +569,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
                  .filter(_.patientStatus.collect { case PatientStatus(LostToFU) => true }.isDefined)
                  .maxByOption(_.date)
                  .map(_.date),
-               record.patient.dateOfDeath.map(_.atEndOfMonth),
+               record.patient.dateOfDeath,
                Option(record.getSystemicTherapies.map(_.latest).mapTo[List[FollowUp.Therapy]])
                  .filter(_.nonEmpty)
              )

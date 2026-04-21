@@ -483,7 +483,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
             .exists(s => s == Confirmed || s == Partial),
           record.diagnoses.head.notes.flatMap(_.lastOption),
           record.patient.vitalStatus.code.enumValue,
-          record.patient.dateOfDeath.map(_.atEndOfMonth)
+          record.patient.dateOfDeath.map(YearMonth.from)
         )
 
       } yield RDFollowUps(
