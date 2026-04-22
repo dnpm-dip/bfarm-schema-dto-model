@@ -2,6 +2,7 @@ package de.dnpm.bfarm.model.onco
 
 
 import java.net.URI
+import java.util.UUID.randomUUID
 import scala.util.chaining._
 import cats.data.NonEmptyList
 import de.dnpm.bfarm.model.base.{
@@ -23,6 +24,7 @@ import de.dnpm.dip.model.{
   ExternalId,
   Id,
   Medications,
+  Recommendation
 }
 import de.dnpm.dip.coding.atc.ATC
 import de.dnpm.dip.model.FollowUp.PatientStatus
@@ -54,6 +56,13 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
 
   protected implicit def oncoDiagnosis: MTBPatientRecord => OncologyCase.Diagnosis = {
+
+    val tnmVersions = 
+      Map(
+        Coding.System[TumorStaging.TNM.UICC].uri -> "8th ed.",
+        Coding.System[TumorStaging.TNM.AJCC].uri -> "8th ed."
+      )
+
 
     record =>
 
@@ -111,7 +120,16 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
           .flatMap(_.tnmClassification)
           .collect { 
             case TumorStaging.TNM(t,n,m) =>
-              Set(t,n,m).map(c => c.copy(display = c.display.orElse(Some(c.code.value))))
+              Set(t,n,m).map(
+                coding => coding.copy(
+                  display = coding.display.orElse(Some(coding.code.value)),
+                  /**
+                   * Version default value added as a (temporary) hack, because it is required even though
+                   * no unified value set of versions has been defined
+                   */
+                  version = coding.version.orElse(tnmVersions.get(coding.system))
+                )
+              )
           },
         tumorStaging
           .flatMap(
@@ -320,6 +338,14 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       StudyRecommendation,
       SystemicTherapyRecommendation
     }
+
+    implicit val prioritytoInt: Recommendation.Priority.Value => Int =
+      Map(
+        Recommendation.Priority.One   -> 1,
+        Recommendation.Priority.Two   -> 2,
+        Recommendation.Priority.Three -> 3,
+        Recommendation.Priority.Four  -> 4
+      )
  
     implicit val therayRecommendation: MTBMedicationRecommendation => SystemicTherapyRecommendation = {
  
@@ -369,7 +395,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
             .levelOfEvidence
             .flatMap(_.addendums.map(_.map(_.code)))
             .getOrElse(Set.empty),
-          recommendation.priority.code,
+          recommendation.priority.code.enumValue.mapTo[Int],
           recommendation.supportingVariants.map(_.map(_.variant.id)),
           recommendation
             .category
@@ -413,7 +439,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
             .levelOfEvidence
             .flatMap(_.addendums.map(_.map(_.code)))
             .getOrElse(Set.empty),
-          recommendation.priority.code,
+          recommendation.priority.code.enumValue.mapTo[Int],
           recommendation.supportingVariants.map(_.map(_.variant.id))
         )
     }
@@ -492,7 +518,9 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
               .maxByOption(_.effectiveDate)
          
           FollowUp.Therapy(
-            therapy.id,
+            // See https://github.com/BfArM-MVH/MVGenomseq_KDK/blob/0bcf96267d938272ba625ba6a568c213db978415/KDK/OncologyFollowUp.json#L148
+            therapy.basedOn.map(_.id)
+              .getOrElse(Id(randomUUID.toString)),
             therapy.period.get.start,
             therapy.period.flatMap(_.endOption),
             therapy.statusReason.map(_.code.enumValue.mapTo[TerminationReason.Value]),
@@ -541,7 +569,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
                  .filter(_.patientStatus.collect { case PatientStatus(LostToFU) => true }.isDefined)
                  .maxByOption(_.date)
                  .map(_.date),
-               record.patient.dateOfDeath.map(_.atEndOfMonth),
+               record.patient.dateOfDeath,
                Option(record.getSystemicTherapies.map(_.latest).mapTo[List[FollowUp.Therapy]])
                  .filter(_.nonEmpty)
              )

@@ -4,7 +4,6 @@ import scala.util.Properties.envOrElse
 name := "dnpm-bfarm-model"  // Central Clinical Data Node
 ThisBuild / organization := "de.dnpm"
 ThisBuild / scalaVersion := "2.13.18"
-//ThisBuild / version      := envOrElse("VERSION","1.0.0")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/bfram-schema-dto-model").split("/")
 ThisBuild / githubOwner      := ownerRepo(0)
@@ -23,7 +22,7 @@ lazy val global = project
   )
   .aggregate(
     base,
-    generators,
+    test_base,
     oncology,
     rare_diseases
   )
@@ -40,17 +39,20 @@ lazy val base = project
     )
   )
 
-lazy val generators = project
+lazy val test_base = project
   .settings(
-    name := "dnpm-mvh-submission-generators",
+    name := "dnpm-mvh-submission-test_base",
     settings,
     libraryDependencies ++= Seq(
+      dependencies.scalatest,
       dependencies.service_base,
-      dependencies.generators
+      dependencies.generators,
+      dependencies.json_schema_validator
     ),
     // Only required for tests, so no need to publish/release
     publish / skip := true
   )
+  .dependsOn(base)
 
 lazy val oncology = project
   .settings(
@@ -58,7 +60,6 @@ lazy val oncology = project
     version := envOrElse("ONCOLOGY_MODEL_VERSION","1.0.0-SNAPSHOT"),
     settings,
     libraryDependencies ++= Seq(
-      dependencies.scalatest,
       dependencies.mtb_dtos,
       dependencies.mtb_generators,
       dependencies.icd10gm,
@@ -71,7 +72,7 @@ lazy val oncology = project
   )
   .dependsOn(
     base,
-    generators % Test
+    test_base % Test
   )
 
 lazy val rare_diseases = project
@@ -80,7 +81,6 @@ lazy val rare_diseases = project
     version := envOrElse("RD_MODEL_VERSION","1.0.0-SNAPSHOT"),
     settings,
     libraryDependencies ++= Seq(
-      dependencies.scalatest,
       dependencies.rd_dtos,
       dependencies.rd_generators,
       dependencies.icd10gm,
@@ -92,11 +92,11 @@ lazy val rare_diseases = project
       dependencies.alpha_id_se,
       dependencies.hpo,
       dependencies.orphanet
-    )
+    ),
   )
   .dependsOn(
     base,
-    generators % Test
+    test_base % Test
   )
 
 
@@ -106,22 +106,23 @@ lazy val rare_diseases = project
 
 lazy val dependencies =
   new {
-    val service_base   = "de.dnpm.dip"   %% "service-base"          % "1.2.0"
-    val mtb_dtos       = "de.dnpm.dip"   %% "mtb-dto-model"         % "1.1.2"
-    val rd_dtos        = "de.dnpm.dip"   %% "rd-dto-model"          % "1.1.2"
-    val scalatest      = "org.scalatest" %% "scalatest"             % "3.2.18" % Test
-    val generators     = "de.ekut.tbi"   %% "generators"            % "1.0.0"
-    val mtb_generators = "de.dnpm.dip"   %% "mtb-dto-generators"    % "1.1.2" % Test
-    val rd_generators  = "de.dnpm.dip"   %% "rd-dto-generators"     % "1.1.2" % Test
-    val icd10gm        = "de.dnpm.dip"   %% "icd10gm-impl"          % "1.1.2" % Test
-    val icdo3          = "de.dnpm.dip"   %% "icdo3-impl"            % "1.1.2" % Test
-    val icd_catalogs   = "de.dnpm.dip"   %% "icd-claml-packaged"    % "1.1.2" % Test
-    val atc_impl       = "de.dnpm.dip"   %% "atc-impl"              % "1.1.0" % Test
-    val atc_catalogs   = "de.dnpm.dip"   %% "atc-catalogs-packaged" % "1.1.0" % Test
-    val hgnc_geneset   = "de.dnpm.dip"   %% "hgnc-gene-set-impl"    % "1.1.1" % Test
-    val hpo            = "de.dnpm.dip"   %% "hp-ontology"           % "1.1.2" % Test
-    val alpha_id_se    = "de.dnpm.dip"   %% "alpha-id-se"           % "1.1.2" % Test
-    val orphanet       = "de.dnpm.dip"   %% "orphanet-ordo"         % "1.1.2" % Test
+    val scalatest             = "org.scalatest" %% "scalatest"             % "3.2.18"
+    val json_schema_validator = "com.networknt" %  "json-schema-validator" % "1.5.9"
+    val service_base          = "de.dnpm.dip"   %% "service-base"          % "1.2.0"
+    val mtb_dtos              = "de.dnpm.dip"   %% "mtb-dto-model"         % "1.2.0"
+    val rd_dtos               = "de.dnpm.dip"   %% "rd-dto-model"          % "1.2.0"
+    val generators            = "de.ekut.tbi"   %% "generators"            % "1.0.0"
+    val mtb_generators        = "de.dnpm.dip"   %% "mtb-dto-generators"    % "1.2.0" % Test
+    val rd_generators         = "de.dnpm.dip"   %% "rd-dto-generators"     % "1.2.0" % Test
+    val icd10gm               = "de.dnpm.dip"   %% "icd10gm-impl"          % "1.1.2" % Test
+    val icdo3                 = "de.dnpm.dip"   %% "icdo3-impl"            % "1.1.2" % Test
+    val icd_catalogs          = "de.dnpm.dip"   %% "icd-claml-packaged"    % "1.1.2" % Test
+    val atc_impl              = "de.dnpm.dip"   %% "atc-impl"              % "1.1.0" % Test
+    val atc_catalogs          = "de.dnpm.dip"   %% "atc-catalogs-packaged" % "1.1.0" % Test
+    val hgnc_geneset          = "de.dnpm.dip"   %% "hgnc-gene-set-impl"    % "1.1.1" % Test
+    val hpo                   = "de.dnpm.dip"   %% "hp-ontology"           % "1.2.0"
+    val alpha_id_se           = "de.dnpm.dip"   %% "alpha-id-se"           % "1.2.0" % Test
+    val orphanet              = "de.dnpm.dip"   %% "orphanet-ordo"         % "1.2.0" % Test
   }
 
 

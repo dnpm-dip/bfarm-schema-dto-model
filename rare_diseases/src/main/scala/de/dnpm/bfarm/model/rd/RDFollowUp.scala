@@ -1,7 +1,10 @@
 package de.dnpm.bfarm.model.rd
 
 
-import java.time.LocalDate
+import java.time.{
+  LocalDate,
+  YearMonth
+}
 import cats.data.NonEmptyList
 import de.dnpm.dip.util.json.{
   readsNel,
@@ -18,9 +21,11 @@ import de.dnpm.dip.rd.model.{
 }
 import play.api.libs.json.{
   Json,
+  JsPath,
   Format,
   OFormat,
 }
+import play.api.libs.functional.syntax._
 
 
 /*
@@ -43,7 +48,7 @@ final case class RDFollowUp
   diagnosisEstablished: Boolean,
   diseaseProgression: Option[String],
   vitalStatus: VitalStatus.Value,
-  deathDate: Option[LocalDate]
+  deathDate: Option[YearMonth]
 )
 
 object RDFollowUp
@@ -67,8 +72,21 @@ object RDFollowUp
     implicit val formatValue: Format[Value] =
       Json.formatEnum(this)
 
+
     implicit val format: OFormat[PhenotypeChange] =
-      Json.format[PhenotypeChange]
+      (
+        JsPath.format[Coding[HPO]] and
+        (JsPath \ "change").format[PhenotypeChange.Value]
+      )(
+        PhenotypeChange(_,_),
+        unlift(PhenotypeChange.unapply _),
+      )
+
+  }
+
+  import de.dnpm.dip.util.json.{
+    readsYearMonth,
+    writesYearMonth
   }
 
   implicit val format: OFormat[RDFollowUp] =
@@ -78,7 +96,7 @@ object RDFollowUp
 
 final case class RDFollowUps
 (
-  followUpOds: NonEmptyList[RDFollowUp]
+  followUpRds: NonEmptyList[RDFollowUp]
 )
 
 object RDFollowUps
