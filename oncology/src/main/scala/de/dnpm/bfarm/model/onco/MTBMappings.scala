@@ -123,10 +123,8 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
               Set(t,n,m).map(
                 coding => coding.copy(
                   display = coding.display.orElse(Some(coding.code.value)),
-                  /**
-                   * Version default value added as a (temporary) hack, because it is required even though
-                   * no unified value set of versions has been defined
-                   */
+                  // Version default value added as a (temporary) hack, because it is required even though
+                  // no unified value set of versions has been defined
                   version = coding.version.orElse(tnmVersions.get(coding.system))
                 )
               )
