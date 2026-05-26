@@ -505,24 +505,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
             )
         )
       )
-/*
-    carePlans => 
-      Option.when(carePlans.nonEmpty)(
-        OncologyPlan(
-          carePlans.mapTo[Option[OncologyPlan.CarePlan]],
-          carePlans.flatMap(_.medicationRecommendations.getOrElse(List.empty))
-            .pipe(
-               recs =>
-                 Option.when(recs.nonEmpty)(recs.mapAllTo[SystemicTherapyRecommendation])
-            ),
-          carePlans.flatMap(_.studyEnrollmentRecommendations.getOrElse(List.empty))
-            .pipe(
-               recs =>
-                 Option.when(recs.nonEmpty)(recs.mapAllTo[StudyRecommendation])
-            )
-        )
-      )
- */
+
   }
 
 
