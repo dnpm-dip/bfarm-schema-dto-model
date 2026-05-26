@@ -448,7 +448,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       import CarePlan.BoardType.TherapyBoard
 
       carePlans =>
-        // Extract therapyBoard carePlans from the overall list 
+
         val therapyBoardPlans = carePlans match {
 
           // If the new attribute "CarePlan.BoardType" is already used to identify CarePlans, base the filtering on this
@@ -467,7 +467,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
             )
         }
 
-      // Pikc the last CarePlan by date for molecularBoardDecisionDate
+      // Pick the last CarePlan by date for molecularBoardDecisionDate
       therapyBoardPlans.maxByOption(_.issuedOn).map(_.issuedOn).map(
         boardDate =>
           OncologyPlan.CarePlan(
