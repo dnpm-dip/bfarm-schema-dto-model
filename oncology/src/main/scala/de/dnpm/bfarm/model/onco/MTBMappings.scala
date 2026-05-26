@@ -21,6 +21,7 @@ import de.dnpm.dip.util.mapping.syntax._
 import de.dnpm.dip.service.mvh
 import de.dnpm.dip.model.{
   BaseVariant,
+  CarePlan,
   ExternalId,
   Id,
   Medications,
@@ -442,50 +443,86 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         )
     }
  
-    implicit val oncoCarePlan: List[MTBCarePlan] => Option[OncologyPlan.CarePlan] =
-      _.filter(_.recommendationsMissingReason.isEmpty)
-       .pipe {
-         carePlans =>
-           carePlans
-             .minByOption(_.issuedOn)
-             .map(_.issuedOn)
-             .map(date =>
-               OncologyPlan.CarePlan(
-                 molecularBoardDecisionDate = date,
-                 studyRecommended = carePlans.exists(_.studyEnrollmentRecommendations.exists(_.nonEmpty)),
-                 counsellingRecommended = carePlans.exists(_.geneticCounselingRecommendation.isDefined),
-                 reEvaluationRecommended = carePlans.exists(_.histologyReevaluationRequests.exists(_.nonEmpty)),
-                 interventionRecommended = false,  // Not in MTB-KDS
-                 suitableInterventions  = None,    // Not in MTB-KDS
-                 otherRecommendations =
-                   carePlans
-                     .flatMap(_.procedureRecommendations.getOrElse(List.empty))
-                     .map(_.code)
-                     .pipe { 
-                       case codings if codings.nonEmpty => Some(codings.map(_.code))
-                       case _                           => None
-                     }
-               )
-           )
-       }
- 
-     carePlans => 
-       Option.when(carePlans.nonEmpty)(
-         OncologyPlan(
-           carePlans.mapTo[Option[OncologyPlan.CarePlan]],
-           carePlans.flatMap(_.medicationRecommendations.getOrElse(List.empty))
-             .pipe(
-                recs =>
-                  Option.when(recs.nonEmpty)(recs.mapAllTo[SystemicTherapyRecommendation])
-             ),
-           carePlans.flatMap(_.studyEnrollmentRecommendations.getOrElse(List.empty))
-             .pipe(
-                recs =>
-                  Option.when(recs.nonEmpty)(recs.mapAllTo[StudyRecommendation])
-             )
-         )
-       )
- 
+    implicit val oncoCarePlan: List[MTBCarePlan] => Option[OncologyPlan.CarePlan] = {
+
+      import CarePlan.BoardType.TherapyBoard
+
+      carePlans =>
+        // Extract therapyBoard carePlans from the overall list 
+        val therapyBoardPlans = carePlans match {
+
+          // If the new attribute "CarePlan.BoardType" is already used to identify CarePlans, base the filtering on this
+          case cps if cps.exists(_.boardType.exists(_.code.enumValue == TherapyBoard)) =>
+            cps.filter(_.boardType.exists(_.code.enumValue == TherapyBoard))
+
+          // Else fall back to pick all CarePlans with any kind of recommendation as "therapy board plans"  
+          case cps =>
+            cps.filter(cp => 
+              cp.geneticCounselingRecommendation.isDefined ||
+              cp.medicationRecommendations.exists(_.nonEmpty) ||
+              cp.procedureRecommendations.exists(_.nonEmpty) ||
+              cp.studyEnrollmentRecommendations.exists(_.nonEmpty) ||
+              cp.histologyReevaluationRequests.exists(_.nonEmpty) ||
+              cp.rebiopsyRequests.exists(_.nonEmpty)
+            )
+        }
+
+      // Pikc the last CarePlan by date for molecularBoardDecisionDate
+      therapyBoardPlans.maxByOption(_.issuedOn).map(_.issuedOn).map(
+        boardDate =>
+          OncologyPlan.CarePlan(
+            molecularBoardDecisionDate = boardDate,
+            studyRecommended = carePlans.exists(_.studyEnrollmentRecommendations.exists(_.nonEmpty)),
+            counsellingRecommended = carePlans.exists(_.geneticCounselingRecommendation.isDefined),
+            reEvaluationRecommended = carePlans.exists(_.histologyReevaluationRequests.exists(_.nonEmpty)),
+            interventionRecommended = false,  // Not in MTB-KDS
+            suitableInterventions  = None,    // Not in MTB-KDS
+            otherRecommendations =
+              carePlans
+                .flatMap(_.procedureRecommendations.getOrElse(List.empty))
+                .map(_.code)
+                .pipe { 
+                  case codings if codings.nonEmpty => Some(codings.map(_.code))
+                  case _                           => None
+                }
+          )
+        )
+    }
+
+    carePlans => 
+      carePlans.mapTo[Option[OncologyPlan.CarePlan]].map(plan =>
+        OncologyPlan(
+          plan,
+          carePlans.flatMap(_.medicationRecommendations.getOrElse(List.empty))
+            .pipe(
+               recs =>
+                 Option.when(recs.nonEmpty)(recs.mapAllTo[SystemicTherapyRecommendation])
+            ),
+          carePlans.flatMap(_.studyEnrollmentRecommendations.getOrElse(List.empty))
+            .pipe(
+               recs =>
+                 Option.when(recs.nonEmpty)(recs.mapAllTo[StudyRecommendation])
+            )
+        )
+      )
+/*
+    carePlans => 
+      Option.when(carePlans.nonEmpty)(
+        OncologyPlan(
+          carePlans.mapTo[Option[OncologyPlan.CarePlan]],
+          carePlans.flatMap(_.medicationRecommendations.getOrElse(List.empty))
+            .pipe(
+               recs =>
+                 Option.when(recs.nonEmpty)(recs.mapAllTo[SystemicTherapyRecommendation])
+            ),
+          carePlans.flatMap(_.studyEnrollmentRecommendations.getOrElse(List.empty))
+            .pipe(
+               recs =>
+                 Option.when(recs.nonEmpty)(recs.mapAllTo[StudyRecommendation])
+            )
+        )
+      )
+ */
   }
 
 
