@@ -36,7 +36,7 @@ import play.api.libs.json.{
 
 final case class OncologyPlan
 (
-  carePlanOd: Option[OncologyPlan.CarePlan],
+  carePlanOd: OncologyPlan.CarePlan,
   recommendedSystemicTherapies: Option[List[OncologyPlan.SystemicTherapyRecommendation]],
   recommendedStudies: Option[List[OncologyPlan.StudyRecommendation]]
   // PreventiveMeasures not in MTB KDS
