@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.1...dnpm-bfarm-model-base-v1.0.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* Adapted handling of mapping config to avoid a packaged config.json ([#5](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/5)) ([35faf74](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/35faf744f04aa05c56d7bcb4ca8f5ab55016f81b))
+
 ## [1.0.1](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.0...dnpm-bfarm-model-base-v1.0.1) (2026-05-11)
 
 
