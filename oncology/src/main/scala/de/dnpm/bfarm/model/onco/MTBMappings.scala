@@ -452,11 +452,8 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
         val therapyBoardPlans = carePlans match {
 
-          // If only 1 CarePlan occurs, it is by definition an "indication board plan", so no therapy board plans
-          case List(_) => List.empty[MTBCarePlan]
-
-          // If the new attribute "CarePlan.BoardType" is already used to identify CarePlans, base the filtering on this
-          case cps if cps.exists(_.boardType.exists(_.code.enumValue == TherapyBoard)) =>
+          // If the new attribute "CarePlan.BoardType" is used to identify CarePlans, base the filtering on this
+          case cps if cps.exists(_.boardType.isDefined) =>
             cps.filter(_.boardType.exists(_.code.enumValue == TherapyBoard))
 
           // Else fall back to pick all CarePlans with any kind of recommendation as "therapy board plans"  
