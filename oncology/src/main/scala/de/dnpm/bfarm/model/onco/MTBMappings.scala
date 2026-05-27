@@ -443,6 +443,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         )
     }
  
+ 
     implicit val oncoCarePlan: List[MTBCarePlan] => Option[OncologyPlan.CarePlan] = {
 
       import CarePlan.BoardType.TherapyBoard
@@ -452,7 +453,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         val therapyBoardPlans = carePlans match {
 
           // If only 1 CarePlan occurs, it is by definition an "indication board plan", so no therapy board plans
-          case _ :: Nil => List.empty[MTBCarePlan]
+          case List(_) => List.empty[MTBCarePlan]
 
           // If the new attribute "CarePlan.BoardType" is already used to identify CarePlans, base the filtering on this
           case cps if cps.exists(_.boardType.exists(_.code.enumValue == TherapyBoard)) =>
