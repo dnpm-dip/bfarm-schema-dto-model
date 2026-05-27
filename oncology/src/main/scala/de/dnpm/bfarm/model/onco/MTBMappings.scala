@@ -451,6 +451,9 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
         val therapyBoardPlans = carePlans match {
 
+          // If only 1 CarePlan occurs, it is by definition an "indication board plan", so no therapy board plans
+          case _ :: Nil => List.empty[MTBCarePlan]
+
           // If the new attribute "CarePlan.BoardType" is already used to identify CarePlans, base the filtering on this
           case cps if cps.exists(_.boardType.exists(_.code.enumValue == TherapyBoard)) =>
             cps.filter(_.boardType.exists(_.code.enumValue == TherapyBoard))
@@ -472,13 +475,13 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         boardDate =>
           OncologyPlan.CarePlan(
             molecularBoardDecisionDate = boardDate,
-            studyRecommended = carePlans.exists(_.studyEnrollmentRecommendations.exists(_.nonEmpty)),
-            counsellingRecommended = carePlans.exists(_.geneticCounselingRecommendation.isDefined),
-            reEvaluationRecommended = carePlans.exists(_.histologyReevaluationRequests.exists(_.nonEmpty)),
+            studyRecommended = therapyBoardPlans.exists(_.studyEnrollmentRecommendations.exists(_.nonEmpty)),
+            counsellingRecommended = therapyBoardPlans.exists(_.geneticCounselingRecommendation.isDefined),
+            reEvaluationRecommended = therapyBoardPlans.exists(_.histologyReevaluationRequests.exists(_.nonEmpty)),
             interventionRecommended = false,  // Not in MTB-KDS
             suitableInterventions  = None,    // Not in MTB-KDS
             otherRecommendations =
-              carePlans
+              therapyBoardPlans
                 .flatMap(_.procedureRecommendations.getOrElse(List.empty))
                 .map(_.code)
                 .pipe { 
