@@ -3,6 +3,7 @@ package de.dnpm.bfarm.model.base
 
 import java.io.FileInputStream
 import scala.util.{
+  Failure,
   Try,
   Using
 }
@@ -50,18 +51,22 @@ object Config extends Logging
     Json.reads[Config]
 
   lazy val instance: Config =
-    Try(sys.env("CCDN_BFARM_MAPPINGS_CONFIG_FILE"))
-      .orElse(Try(sys.props("ccdn.bfarm.mappings.config.file")))
-      .flatMap(in => Using(new FileInputStream(in))(Json.parse(_)))
-      .map(
-        Json.fromJson[Config](_)
-          .fold(
-            errs => {
-              log.error(errs.toString)
-              throw new Exception(errs.toString)
-            },
-            identity
-          )
+    Try(sys.env("CCDN_BFARM_MAPPINGS_CONFIG_FILE")).orElse(Try(sys.props("ccdn.bfarm.mappings.config.file")))
+      .transform(
+        in => Using(new FileInputStream(in))(Json.parse(_)).map(
+          Json.fromJson[Config](_)
+            .fold(
+              errs => {
+                log.error(errs.toString)
+                throw new Exception(errs.toString)
+              },
+              identity
+            )
+        ),
+        t => {
+          log.warn("Failed to load specified externaly mapping config file. This will lead to fallback to default Config", t)
+          Failure(t)
+        }
       )
      .getOrElse(
        Config( 
