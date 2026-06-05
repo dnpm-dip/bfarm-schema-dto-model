@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.1...dnpm-bfarm-model-oncology-v1.0.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* molecularboarddecisiondate mapping ([#7](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/7)) ([c294736](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/c294736d484c07b22ecc20469a58cc56b03f2150))
+
 ## [1.0.1](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.0...dnpm-bfarm-model-oncology-v1.0.1) (2026-05-11)
 
 
