@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.2...dnpm-bfarm-model-base-v1.0.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* Added missing site Bochum to mapping config ([#8](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/8)) ([0483772](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/04837725e7423b5c567c9228703a2081eec65b5b))
+
 ## [1.0.2](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.1...dnpm-bfarm-model-base-v1.0.2) (2026-06-05)
 
 
