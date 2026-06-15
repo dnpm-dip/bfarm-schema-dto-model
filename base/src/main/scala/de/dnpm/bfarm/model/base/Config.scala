@@ -76,6 +76,7 @@ object Config extends Logging
          ),
          sites = Map(
            "Charité" -> ("261101015","GRZB00007"),
+           "KKB"     -> ("260590071","GRZDD0004"),
            "KUM"     -> ("260914050","GRZM00006"),
            "MHH"     -> ("260320597","GRZDD0004"),
            "MRI"     -> ("260913195","GRZM00006"),
