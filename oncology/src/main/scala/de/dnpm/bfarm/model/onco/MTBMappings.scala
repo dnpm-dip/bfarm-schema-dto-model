@@ -139,6 +139,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       )
   }
 
+/*
   protected implicit val priorDiagnostics: List[MolecularDiagnosticReport] => Option[OncologyCase.PriorDiagnostics] = {
 
     import DiagnosticType._           
@@ -170,6 +171,36 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
             None
           )
         )
+  }
+*/
+
+  protected implicit val priorDiagnostics: MolecularDiagnosticReport => OncologyCase.PriorDiagnostics = {
+
+    import DiagnosticType._           
+
+    implicit val diagnosticType: MolecularDiagnosticReport.Type.Value => DiagnosticType.Value =
+      Map(
+        MolecularDiagnosticReport.Type.Array           -> Array,
+        MolecularDiagnosticReport.Type.Single          -> Single,
+        MolecularDiagnosticReport.Type.Karyotyping     -> Karyotyping,
+        MolecularDiagnosticReport.Type.GenePanel       -> Panel,
+        MolecularDiagnosticReport.Type.Panel           -> Panel,
+        MolecularDiagnosticReport.Type.Exome           -> Exome,
+        MolecularDiagnosticReport.Type.GenomeShortRead -> GenomeShortRead,
+        MolecularDiagnosticReport.Type.GenomeLongRead  -> GenomeLongRead
+      )
+      .orElse {
+        case _ => Other          
+      }
+
+    report => OncologyCase.PriorDiagnostics(
+      report.`type`.code.enumValue.mapTo[DiagnosticType.Value],
+      Some(report.issuedOn),
+      // Simple Variants and Copy Number Variants not represented in MTB-KDS PRIOR molecular diagnostics
+      None,
+      None
+    )
+    
   }
 
 
@@ -229,7 +260,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
       OncologyCase(
         record.mapTo[OncologyCase.Diagnosis],
-        record.priorDiagnosticReports.getOrElse(List.empty).mapTo[Option[OncologyCase.PriorDiagnostics]],
+        record.priorDiagnosticReports.map(_.mapAllTo[OncologyCase.PriorDiagnostics]),
         record.guidelineTherapies.map(_.mapAllTo[Option[OncologyCase.PriorTherapy]].flatten)
       )
 
@@ -261,7 +292,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         snv.altAllele.value,
         snv.dnaChange,
         snv.proteinChange,
-        snv.transcriptId,
+        Some(snv.transcriptId),
         None,  // Not defind in MTB-KDS
         None   // Not defind in MTB-KDS
       )

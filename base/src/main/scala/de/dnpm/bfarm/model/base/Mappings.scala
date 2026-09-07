@@ -149,7 +149,7 @@ trait Mappings[RecordType <: PatientRecord,UseCaseSubmission <: de.dnpm.bfarm.mo
           metadata.researchConsents.map(
             _.map(
               consent => ResearchConsent(
-                "2025.0.1",
+                Some("2025.0.1"),
                 consent.date,
                 Some(Json.toJson(consent)),
                 None

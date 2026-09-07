@@ -47,7 +47,7 @@ import play.api.libs.json.{
 final case class RDCase
 (
   diagnosisRd: RDCase.Diagnosis,
-  priorRd: Option[RDCase.PriorRD]
+  priorRds: Option[List[RDCase.PriorRD]]
 )
 
 object RDCase
