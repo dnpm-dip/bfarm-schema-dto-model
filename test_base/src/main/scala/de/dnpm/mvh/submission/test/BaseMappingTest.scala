@@ -54,11 +54,21 @@ with SubmissionGenerators[T]
   protected val submissions: Seq[Submission[T]] =
     List.fill(42)(Gen.of[Submission[T]].next)
 
+//  private val outputDir = new java.io.File(s"/home/lucien/Downloads/mv_dummy_data/${useCase.replace(" ","").toLowerCase}")
+//  outputDir.mkdirs
+ 
 
   s"$useCase Mappings" must "have worked and produced schema-conformant JSON output" in {
 
     forAll(
       submissions.map(mapping)
+//        .tapEach { 
+//          submission =>
+//            val file = new java.io.File(outputDir,s"${useCase.replace(" ","")}Submission_${submission.metaData.tanC}.json")
+//            scala.util.Using.resource(new java.io.FileWriter(file)){
+//              _.write(Json.prettyPrint(Json.toJson(submission)))
+//            }
+//        }
         .map(Json.toJson(_))
         .map(Json.stringify)
     ){ 

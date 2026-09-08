@@ -126,7 +126,9 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
                   display = coding.display.orElse(Some(coding.code.value)),
                   // Version default value added as a (temporary) hack, because it is required even though
                   // no unified value set of versions has been defined
-                  version = coding.version.orElse(tnmVersions.get(coding.system))
+                  version = coding.version.orElse(tnmVersions.get(coding.system)),
+                  // Override 'system' as requested in BfArM message from 2026-08-24
+                  system = URI.create("https://www.uicc.org/resources/tnm")
                 )
               )
           },
@@ -139,7 +141,8 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       )
   }
 
-  protected implicit val priorDiagnostics: List[MolecularDiagnosticReport] => Option[OncologyCase.PriorDiagnostics] = {
+
+  protected implicit val priorDiagnostics: MolecularDiagnosticReport => OncologyCase.PriorDiagnostics = {
 
     import DiagnosticType._           
 
@@ -158,18 +161,14 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         case _ => Other          
       }
 
-    reports =>
-      reports
-        .maxByOption(_.issuedOn)
-        .map(
-          report => OncologyCase.PriorDiagnostics(
-            report.`type`.code.enumValue.mapTo[DiagnosticType.Value],
-            Some(report.issuedOn),
-            // Simple Variants and Copy Number Variants not represented in MTB-KDS PRIOR molecular diagnostics
-            None,
-            None
-          )
-        )
+    report => OncologyCase.PriorDiagnostics(
+      report.`type`.code.enumValue.mapTo[DiagnosticType.Value],
+      Some(report.issuedOn),
+      // Simple Variants and Copy Number Variants not represented in MTB-KDS PRIOR molecular diagnostics
+      None,
+      None
+    )
+    
   }
 
 
@@ -229,7 +228,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
 
       OncologyCase(
         record.mapTo[OncologyCase.Diagnosis],
-        record.priorDiagnosticReports.getOrElse(List.empty).mapTo[Option[OncologyCase.PriorDiagnostics]],
+        record.priorDiagnosticReports.map(_.mapAllTo[OncologyCase.PriorDiagnostics]),
         record.guidelineTherapies.map(_.mapAllTo[Option[OncologyCase.PriorTherapy]].flatten)
       )
 
@@ -261,7 +260,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         snv.altAllele.value,
         snv.dnaChange,
         snv.proteinChange,
-        snv.transcriptId,
+        Some(snv.transcriptId),
         None,  // Not defind in MTB-KDS
         None   // Not defind in MTB-KDS
       )

@@ -146,56 +146,37 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
     )
 
 
-  protected implicit val priorRD: (
-   (
-     List[RDNGSReport],
-     Option[Hospitalization],
-     NonEmptyList[RDEpisodeOfCare]
-   )
-  ) => PriorRD = { 
+  protected implicit val priorRD: RDPatientRecord => Option[List[PriorRD]] =  
+    record => for {
 
-    case (ngsReports,hospitalization,episodes) =>
+      indicationCarePlan <- record.indicationCarePlan
 
-      val priorDiagnostics = 
-        ngsReports.find(_.conclusion.isDefined)
+      priorDiagnostics <-
+        record.getNgsReports
+          .filter(_.issuedOn isBefore indicationCarePlan.issuedOn)
+          .maxByOption(_.issuedOn)
 
+    } yield List(
       PriorRD(
-        priorDiagnostics
-          .map(_.`type`.code.enumValue.mapTo[DiagnosticType.Value])
-          .getOrElse(DiagnosticType.NonePerformed),
-        RDDiagnosis.FamilyControlLevel.Single.mapTo[PriorRD.Extent.Value],  //TODO!!!!!!
-        priorDiagnostics.map(_.issuedOn),
-        priorDiagnostics
-          .flatMap(_.conclusion)
-          .map(_.code.enumValue.mapTo[PriorRD.DiagnosticAssessment.Value])
+        priorDiagnostics.`type`.code.enumValue.mapTo[DiagnosticType.Value],
+     RDDiagnosis.FamilyControlLevel.Single.mapTo[PriorRD.Extent.Value],  //TODO!!!!!!
+        Some(priorDiagnostics.issuedOn),
+        priorDiagnostics.conclusion.map(_.code.enumValue.mapTo[PriorRD.DiagnosticAssessment.Value])
           .getOrElse(PriorRD.DiagnosticAssessment.Other),
-        hospitalization
-          .map(_.numberOfStays.code.enumValue.mapTo[Hospitalizations.Value])
+        record.hospitalization.map(_.numberOfStays.code.enumValue.mapTo[Hospitalizations.Value])
           .getOrElse(Hospitalizations.Unknown),
-        hospitalization
-          .map(_.numberOfDays.code.enumValue.mapTo[HospitalizationDays.Value])
+        record.hospitalization.map(_.numberOfDays.code.enumValue.mapTo[HospitalizationDays.Value])
           .getOrElse(HospitalizationDays.Unknown),
-        YearMonth.from(
-          episodes.toList
-            .map(_.period.start)
-            .min
-        )
+        YearMonth.from(record.episodesOfCare.toList.map(_.period.start).min)
       )
-
-  }
+    )
+   
 
   protected implicit val rdCaseMapping: RDPatientRecord => RDCase =
     record =>
       RDCase(
         record.mapTo[RDCase.Diagnosis],
-        Option(
-          (
-            record.getNgsReports,
-            record.hospitalization,
-            record.episodesOfCare
-          )
-          .mapTo[RDCase.PriorRD]
-        )
+        record.mapTo[Option[List[PriorRD]]]
       )
 
 

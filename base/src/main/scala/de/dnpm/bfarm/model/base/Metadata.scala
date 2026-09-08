@@ -147,7 +147,7 @@ object Metadata
 
   final case class ResearchConsent
   (
-    schemaVersion: String,
+    schemaVersion: Option[String],
     presentationDate: LocalDate,
     scope: Option[JsValue],
     noScopeJustification: Option[ResearchConsent.NoScopeJustification.Value]

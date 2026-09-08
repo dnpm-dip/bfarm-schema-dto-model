@@ -79,7 +79,7 @@ object OncologyMolecular
     alt: String,
     dnaChange: Code[HGVS],
     proteinChange: Option[Code[HGVS]],
-    transcriptId: Coding[Transcript.Systems],
+    transcriptId: Option[Coding[Transcript.Systems]],
     variantTypes: Option[List[Coding[SequenceOntology]]],
     loh: Option[Boolean]
   )

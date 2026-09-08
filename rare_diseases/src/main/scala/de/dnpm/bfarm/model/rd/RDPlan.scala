@@ -79,7 +79,7 @@ object RDPlan
     register: String,
     name: String,
     id: Id[Study],
-    variantReferences: Option[List[Id[Variant]]]
+    variants: Option[List[Id[Variant]]]
   )
 
   object StudyRecommendation
@@ -95,7 +95,7 @@ object RDPlan
     `type`: Code[RDTherapy.Category.Value],
     strategy: TherapyRecommendation.Strategy.Value,
     strategyOther: Option[String],
-    variantReferences: Option[List[Id[Variant]]]
+    variants: Option[List[Id[Variant]]]
   )
 
   object TherapyRecommendation

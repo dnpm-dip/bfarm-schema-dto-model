@@ -45,7 +45,7 @@ import play.api.libs.json.{
 final case class OncologyCase
 (
   diagnosisOd: OncologyCase.Diagnosis,
-  priorDiagnostic: Option[OncologyCase.PriorDiagnostics],
+  priorDiagnostics: Option[List[OncologyCase.PriorDiagnostics]],
   priorProcedures: Option[List[OncologyCase.PriorTherapy]]
 )
 
