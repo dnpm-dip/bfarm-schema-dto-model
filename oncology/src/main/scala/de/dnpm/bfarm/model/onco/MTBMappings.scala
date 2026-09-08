@@ -126,7 +126,9 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
                   display = coding.display.orElse(Some(coding.code.value)),
                   // Version default value added as a (temporary) hack, because it is required even though
                   // no unified value set of versions has been defined
-                  version = coding.version.orElse(tnmVersions.get(coding.system))
+                  version = coding.version.orElse(tnmVersions.get(coding.system)),
+                  // Override 'system' as requested in BfArM message from 2026-08-24
+                  system = URI.create("https://www.uicc.org/resources/tnm")
                 )
               )
           },
