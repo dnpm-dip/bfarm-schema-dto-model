@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.3...dnpm-bfarm-model-base-v1.0.4) (2026-09-08)
+
+
+### Miscellaneous Chores
+
+* release 1.0.4 ([839a194](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/839a19412f1436840cc55a4b97f9f51074c5b048))
+
 ## [1.0.3](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-base-v1.0.2...dnpm-bfarm-model-base-v1.0.3) (2026-06-15)
 
 
