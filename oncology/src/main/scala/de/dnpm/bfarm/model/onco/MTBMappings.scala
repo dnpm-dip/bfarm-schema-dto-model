@@ -139,40 +139,6 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       )
   }
 
-/*
-  protected implicit val priorDiagnostics: List[MolecularDiagnosticReport] => Option[OncologyCase.PriorDiagnostics] = {
-
-    import DiagnosticType._           
-
-    implicit val diagnosticType: MolecularDiagnosticReport.Type.Value => DiagnosticType.Value =
-      Map(
-        MolecularDiagnosticReport.Type.Array           -> Array,
-        MolecularDiagnosticReport.Type.Single          -> Single,
-        MolecularDiagnosticReport.Type.Karyotyping     -> Karyotyping,
-        MolecularDiagnosticReport.Type.GenePanel       -> Panel,
-        MolecularDiagnosticReport.Type.Panel           -> Panel,
-        MolecularDiagnosticReport.Type.Exome           -> Exome,
-        MolecularDiagnosticReport.Type.GenomeShortRead -> GenomeShortRead,
-        MolecularDiagnosticReport.Type.GenomeLongRead  -> GenomeLongRead
-      )
-      .orElse {
-        case _ => Other          
-      }
-
-    reports =>
-      reports
-        .maxByOption(_.issuedOn)
-        .map(
-          report => OncologyCase.PriorDiagnostics(
-            report.`type`.code.enumValue.mapTo[DiagnosticType.Value],
-            Some(report.issuedOn),
-            // Simple Variants and Copy Number Variants not represented in MTB-KDS PRIOR molecular diagnostics
-            None,
-            None
-          )
-        )
-  }
-*/
 
   protected implicit val priorDiagnostics: MolecularDiagnosticReport => OncologyCase.PriorDiagnostics = {
 
