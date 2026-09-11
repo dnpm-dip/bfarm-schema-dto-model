@@ -24,8 +24,7 @@ import de.dnpm.dip.model.{
   CarePlan,
   ExternalId,
   Id,
-  Medications,
-  Recommendation
+  Medications
 }
 import de.dnpm.dip.coding.atc.ATC
 import de.dnpm.dip.model.FollowUp.PatientStatus
@@ -337,12 +336,20 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
       SystemicTherapyRecommendation
     }
 
-    implicit val prioritytoInt: Recommendation.Priority.Value => Int =
+    implicit val prioritytoInt: MTBRecommendation.Priority.Value => Int =
       Map(
-        Recommendation.Priority.One   -> 1,
-        Recommendation.Priority.Two   -> 2,
-        Recommendation.Priority.Three -> 3,
-        Recommendation.Priority.Four  -> 4
+        MTBRecommendation.Priority.One    -> 1,
+        MTBRecommendation.Priority.Two    -> 2,
+        MTBRecommendation.Priority.Three  -> 3,
+        MTBRecommendation.Priority.Four   -> 4,
+        MTBRecommendation.Priority.Five   -> 5,
+        MTBRecommendation.Priority.Six    -> 6,
+        MTBRecommendation.Priority.Seven  -> 7,
+        MTBRecommendation.Priority.Eight  -> 8,
+        MTBRecommendation.Priority.Nine   -> 9,
+        MTBRecommendation.Priority.Ten    -> 10,
+        MTBRecommendation.Priority.Eleven -> 11,
+        MTBRecommendation.Priority.Twelve -> 12
       )
  
     implicit val therayRecommendation: MTBMedicationRecommendation => SystemicTherapyRecommendation = {
