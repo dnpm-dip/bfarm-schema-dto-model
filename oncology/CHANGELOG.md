@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.4...dnpm-bfarm-model-oncology-v1.0.5) (2026-09-14)
+
+
+### Bug Fixes
+
+* mii consent version mapping ([#12](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/12)) ([ec76ff7](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/ec76ff75059642a0553ab37fc195da0416d1a8b6))
+
 ## [1.0.4](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.2...dnpm-bfarm-model-oncology-v1.0.4) (2026-09-08)
 
 
