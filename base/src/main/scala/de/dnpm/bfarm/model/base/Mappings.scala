@@ -104,6 +104,22 @@ trait Mappings[RecordType <: PatientRecord,UseCaseSubmission <: de.dnpm.bfarm.mo
           mvh.ModelProjectConsent.Purpose.CaseIdentification -> MVConsent.Scope.Domain.CaseIdentification
         )
 
+      val consentPackageVersions =
+        Set( 
+          "2025.0.0",
+          "2025.0.1",
+          "2025.0.2",
+          "2025.0.3",
+          "2026.0.0"
+          //"2026.0.1" // Occurs in BfArM schema although not released yet
+        )
+
+      val consentProfileVersionMappings =
+        Map(
+          "1.0.8" -> "2025.0.3",
+          "1.0.9" -> "2026.0.0"
+        )
+
 /*
       implicit val reasonBroadConsentMissing: BroadConsent.ReasonMissing.Value => Metadata.ResearchConsent.NoScopeJustification.Value = 
         Map(
@@ -149,7 +165,10 @@ trait Mappings[RecordType <: PatientRecord,UseCaseSubmission <: de.dnpm.bfarm.mo
           metadata.researchConsents.map(
             _.map(
               consent => ResearchConsent(
-                Some("2025.0.1"),
+                consent.version.collect { 
+                  case version if consentPackageVersions contains version        => version
+                  case version if consentProfileVersionMappings contains version => consentProfileVersionMappings(version)
+                },
                 consent.date,
                 Some(Json.toJson(consent)),
                 None
