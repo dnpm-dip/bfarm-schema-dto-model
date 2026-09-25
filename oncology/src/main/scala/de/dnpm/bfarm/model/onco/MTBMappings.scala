@@ -80,11 +80,7 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
         )
         .filter(_.nonEmpty)
 
-      val tumorStaging =
-        mainDiagnosis.staging
-          .map(_.latestBy(_.date))
-
-      implicit val specimens = record.getSpecimens
+      val tumorStaging = mainDiagnosis.staging.map(_.latestBy(_.date))
 
       OncologyCase.Diagnosis(
         CodingWithDate(
@@ -99,14 +95,11 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
           .getOrElse(Code[ECOG.Value]("unknown")),
         germlineDiagnoses.isDefined,
         germlineDiagnoses,
-        record.getHistologyReports.find(
-          _.specimen
-           .resolve
-           .flatMap(_.diagnosis.resolveOn(diagnoses))
-           .exists(_.id == mainDiagnosis.id)
-        )
-        .map(_.results.tumorMorphology.value)
-        .get,
+        mainDiagnosis.histology
+          .get.head  // Safe here because presence and integrity of Reference[HistologyReport] is enforced by validation
+          .resolveOn(record.getHistologyReports)
+          .get // Safe: see above
+          .results.tumorMorphology.value,
         mainDiagnosis.topography,
         mainDiagnosis.grading
           .map(_.latestBy(_.date))
