@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-rare-disease-v1.0.4...dnpm-bfarm-model-rare-disease-v1.0.5) (2026-09-25)
+
+
+### Bug Fixes
+
+* Moved dependency on HPO in RDMappings to tests, to avoid it being a required runtime dependency ([#14](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/14)) ([72f8b1a](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/72f8b1a56bd74f0c5dc5d35b31d3bfdc613310da))
+
 ## [1.0.4](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-rare-disease-v1.0.1...dnpm-bfarm-model-rare-disease-v1.0.4) (2026-09-08)
 
 
