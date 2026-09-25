@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.5...dnpm-bfarm-model-oncology-v1.0.6) (2026-09-25)
+
+
+### Bug Fixes
+
+* Fixed resolution of HistologyReport for main tumor morphology ([#16](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/16)) ([08b9389](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/08b938926f8d0a1a168b0a34dc2bdd668c752e52))
+
 ## [1.0.5](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.4...dnpm-bfarm-model-oncology-v1.0.5) (2026-09-14)
 
 
