@@ -11,11 +11,7 @@ import de.dnpm.bfarm.model.base.{
   Mappings,
   Metadata
 }
-import de.dnpm.dip.coding.{
-  CodeSystem,
-  Coding
-}
-import de.dnpm.dip.util.Completer.syntax._
+import de.dnpm.dip.coding.Coding
 import de.dnpm.dip.util.mapping.syntax._
 import de.dnpm.dip.service.mvh
 import de.dnpm.dip.model.{
@@ -36,8 +32,6 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
 {
 
   override val useCase: mvh.UseCase.Value = mvh.UseCase.RD
-
-  implicit val hpOntology: CodeSystem[HPO]
 
 
   protected implicit val diagnosisExtent: RDDiagnosis.FamilyControlLevel.Value => RDCase.Diagnosis.Extent.Value =
@@ -66,9 +60,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
   protected implicit val diagnosisMapping: RDPatientRecord => RDCase.Diagnosis =
     record =>
       RDCase.Diagnosis(
-        record.hpoTerms.map(_.value.complete),
-        // .complete required here as a (temporary) hack, because the Coding.version it is required here,
-        // but the random-generated HPO-codings have no version and also don't go through Completer[Coding[HPO]], which would add it
+        record.hpoTerms.map(_.value),
         record.diagnoses.toList.flatMap(_.onsetDate).minOption
           .orElse(record.hpoTerms.toList.flatMap(_.onsetDate).minOption)
           .getOrElse(YearMonth.of(1800,JANUARY)),
@@ -489,11 +481,4 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
 object RDMappings extends RDMappings
 {
   override lazy val config = Config.instance
-
-  override implicit val hpOntology: CodeSystem[HPO] =
-    HPO.Ontology
-      .getInstance[cats.Id]
-      .get
-      .latest
-
 }
