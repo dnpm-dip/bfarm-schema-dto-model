@@ -216,10 +216,12 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
           .maxOption
           .getOrElse(RDDiagnosis.VerificationStatus.Unconfirmed)
           .mapTo[Diagnosis.Status.Value],
-        record.diagnoses.flatMap(_.codes) match { 
-          case codes if codes.map(_.system).toList.distinct.size == 3 => codes
-          case codes => codes.complete
-        },
+        record.diagnoses.flatMap(
+          diagnosis => diagnosis.codes match { 
+            case codings if codings.map(_.system).toList.distinct.size == 3 => codings
+            case codings => codings.complete
+          }
+        ),
         Option.when(record.diagnoses.exists(_.missingCodeReason.isDefined))(true),
         record.gmfcsStatus.flatMap(_.minByOption(_.effectiveDate)).map(_.value.code)
       )
