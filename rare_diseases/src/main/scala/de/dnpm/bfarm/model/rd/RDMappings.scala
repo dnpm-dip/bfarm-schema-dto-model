@@ -98,20 +98,23 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
       lazy val alphaConcept =
         alphaCoding.flatMap(concept(_))
          .orElse(
-            orphaCoding.flatMap(c => alphaIdSE.latest.concepts.find(_.orphaCode.exists(_ == c.code)))
+            orphaCoding.map(c => alphaIdSE.latest.concepts.filter(_.orphaCode.exists(_ == c.code)))
+              .collect { case matches if matches.size == 1 => matches.head }
           )
           .orElse(
-            icd10Coding.flatMap(
-              icd10 => alphaIdSE.latest.concepts.find(
-                c => c.primaryCode1.exists(_ == icd10.code) || c.primaryCode2.exists(_ == icd10.code)
-              )
+            icd10Coding.map(
+              icd10 => alphaIdSE.latest.concepts.filter(c => c.primaryCode1.exists(_ == icd10.code) || c.primaryCode2.exists(_ == icd10.code))
             )
+            .collect { case matches if matches.size == 1 => matches.head }
           )
  
       lazy val orphaConcept =
         orphaCoding.flatMap(concept(_))
           .orElse(
-            alphaConcept.flatMap(_.orphaCode.flatMap(orphanet.latest.concept))
+            alphaConcept.flatMap(
+              _.orphaCode.map(code => orphanet.latest.concepts.find(_.code == code))
+               .collect { case matches if matches.size == 1 => matches.head }
+            )
           )
  
       lazy val icd10Concept =
@@ -121,12 +124,11 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
               .flatMap(icd10gm.latest.concept)
           )
           .orElse(
-            orphaConcept.flatMap(
-              _.icd10Codes.toList match {
+            orphaConcept.map(_.icd10Codes.toList)
+              .flatMap {
                 case code :: Nil => icd10gm.latest.concept(code)
                 case _           => None
               }
-            )
           )
  
       NonEmptyList.fromListUnsafe(
@@ -136,67 +138,6 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
       )
   }
 
-/*
-  protected def complete(
-    codings: NonEmptyList[Coding[RDDiagnosis.Systems]]
-  ): NonEmptyList[Coding[RDDiagnosis.Systems]] = {
-
-    import AlphaIDSE.extensions._
-    import Orphanet.extensions._
-
-    def coding[T: Coding.System]: Option[Coding[T]] =
-      codings.find(_.system == Coding.System[T].uri).map(_.asInstanceOf[Coding[T]])
-
-    def concept[T](coding: Coding[T])(
-      implicit csp: CodeSystemProvider[T,cats.Id,Applicative[cats.Id]]
-    ): Option[CodeSystem.Concept[T]] =
-      coding.version.flatMap(csp.get).getOrElse(csp.latest).concept(coding.code)
-
-    val alphaCoding = coding[AlphaIDSE]
-    val orphaCoding = coding[Orphanet]
-    val icd10Coding = coding[ICD10GM]
-
-    lazy val alphaConcept =
-      alphaCoding.flatMap(concept(_))
-       .orElse(
-          orphaCoding.flatMap(c => alphaIdSE.latest.concepts.find(_.orphaCode.exists(_ == c.code)))
-        )
-        .orElse(
-          icd10Coding.flatMap(
-            icd10 => alphaIdSE.latest.concepts.find(
-              c => c.primaryCode1.exists(_ == icd10.code) || c.primaryCode2.exists(_ == icd10.code)
-            )
-          )
-        )
-
-    lazy val orphaConcept =
-      orphaCoding.flatMap(concept(_))
-        .orElse(
-          alphaConcept.flatMap(_.orphaCode.flatMap(orphanet.latest.concept))
-        )
-
-    lazy val icd10Concept =
-      icd10Coding.flatMap(concept(_))
-        .orElse(
-          alphaConcept.flatMap(c => c.primaryCode1.orElse(c.primaryCode2))
-            .flatMap(icd10gm.latest.concept)
-        )
-        .orElse(
-          orphaConcept.flatMap(
-            _.icd10Codes.toList match {
-              case code :: Nil => icd10gm.latest.concept(code)
-              case _           => None
-            }
-          )
-        )
-
-    NonEmptyList.fromListUnsafe(
-      alphaCoding.orElse(alphaConcept.map(_.toCoding)).map(Coding.widen[AlphaIDSE,RDDiagnosis.Systems](_)).toList ++
-      orphaCoding.orElse(orphaConcept.map(_.toCoding)).map(Coding.widen[Orphanet,RDDiagnosis.Systems](_)) ++
-      icd10Coding.orElse(icd10Concept.map(_.toCoding)).map(Coding.widen[ICD10GM,RDDiagnosis.Systems](_))
-    )
-  }
-*/
   protected implicit val diagnosisMapping: RDPatientRecord => RDCase.Diagnosis =
     record =>
       RDCase.Diagnosis(
@@ -218,7 +159,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
           .mapTo[Diagnosis.Status.Value],
         record.diagnoses.flatMap(
           diagnosis => diagnosis.codes match { 
-            case codings if codings.map(_.system).toList.distinct.size == 3 => codings
+            case codings if codings.toList.groupBy(_.system).size == 3 => codings
             case codings => codings.complete
           }
         ),
