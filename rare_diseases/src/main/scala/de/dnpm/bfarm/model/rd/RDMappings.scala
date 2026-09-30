@@ -92,7 +92,7 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
 
       val codingsBySystem = codings.toList.groupBy(_.system)
 
-      // Only attempt completion if Codings are supplied as a triple, i.e. exactly 1 Coding per System
+      // Only attempt completion if Codings are supplied as exactly 1 Coding per System, i.e. at most a triple
       if (codingsBySystem.forall(_._2.size == 1)){
 
         val alphaCoding = coding[AlphaIDSE](codingsBySystem)
@@ -102,21 +102,23 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
         lazy val alphaConcept =
           alphaCoding.flatMap(concept(_))
            .orElse {
-             val fromOrpha =
+             val orphaMatches =
                orphaCoding.map(c => alphaIdSE.latest.concepts.filter(_.orphaCode.exists(_ == c.code)))
-                 .collect { case matches if matches.size == 1 => matches.head }
             
-             val fromICD10 =
+             val icd10Matches =
                 icd10Coding.map(
                   icd10 => alphaIdSE.latest.concepts.filter(c => c.primaryCode1.exists(_ == icd10.code) || c.primaryCode2.exists(_ == icd10.code))
                 )
-                .collect { case matches if matches.size == 1 => matches.head }
 
-             (fromOrpha,fromICD10) match { 
-               case (Some(a1),Some(a2)) => Option.when(a1.code == a2.code)(a1)
-               case (orpha @ Some(_),None) => orpha
-               case (None, icd10 @ Some(_)) => icd10
+             val candidates = (orphaMatches,icd10Matches) match { 
+               case (Some(a1s),Some(a2s)) => Some(a1s intersect a2s)
+               case (orphas @ Some(_),None) => orphas
+               case (None, icd10s @ Some(_)) => icd10s
                case _ => None
+             }
+
+             candidates.collect { 
+               case matches if matches.size == 1 => matches.head
              }
            }
        
