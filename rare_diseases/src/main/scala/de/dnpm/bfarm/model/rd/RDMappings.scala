@@ -4,6 +4,7 @@ package de.dnpm.bfarm.model.rd
 import java.net.URI
 import java.time.YearMonth
 import java.time.Month.JANUARY
+import cats.Applicative
 import cats.data.NonEmptyList
 import de.dnpm.bfarm.model.base.{
   Config,
@@ -11,7 +12,14 @@ import de.dnpm.bfarm.model.base.{
   Mappings,
   Metadata
 }
-import de.dnpm.dip.coding.Coding
+import de.dnpm.dip.coding.{
+  CodeSystem,
+  CodeSystemProvider,
+  Coding
+}
+import de.dnpm.dip.coding.icd.ICD10GM
+import de.dnpm.dip.util.Completer
+import de.dnpm.dip.util.Completer.syntax._
 import de.dnpm.dip.util.mapping.syntax._
 import de.dnpm.dip.service.mvh
 import de.dnpm.dip.model.{
@@ -57,6 +65,95 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
     )
 
 
+  // Complete Diagnosis Codings if needed
+  protected implicit lazy val alphaIdSE: CodeSystemProvider[AlphaIDSE,cats.Id,Applicative[cats.Id]] = 
+    AlphaIDSE.Catalogs.getInstance[cats.Id].get
+
+  protected implicit lazy val icd10gm: CodeSystemProvider[ICD10GM,cats.Id,Applicative[cats.Id]] =
+    ICD10GM.Catalogs.getInstance[cats.Id].get
+
+  protected implicit lazy val orphanet: CodeSystemProvider[Orphanet,cats.Id,Applicative[cats.Id]] =
+    Orphanet.Ordo.getInstance[cats.Id].get
+
+  protected implicit val diagnosisCodingsCompleter: Completer[NonEmptyList[Coding[RDDiagnosis.Systems]]] = {
+
+    import AlphaIDSE.extensions._
+    import Orphanet.extensions._
+
+    def coding[T: Coding.System](codingsBySystem: Map[URI,List[Coding[RDDiagnosis.Systems]]]) =
+      codingsBySystem.get(Coding.System[T].uri).map(_.head.asInstanceOf[Coding[T]])
+
+    def concept[T](coding: Coding[T])(
+      implicit csp: CodeSystemProvider[T,cats.Id,Applicative[cats.Id]]
+    ): Option[CodeSystem.Concept[T]] =
+      coding.version.flatMap(csp.get).getOrElse(csp.latest).concept(coding.code)
+
+    codings =>
+
+      val codingsBySystem = codings.toList.groupBy(_.system)
+
+      // Only attempt completion if Codings are supplied as exactly 1 Coding per System, i.e. at most a triple
+      if (codingsBySystem.forall(_._2.size == 1)){
+
+        val alphaCoding = coding[AlphaIDSE](codingsBySystem)
+        val orphaCoding = coding[Orphanet](codingsBySystem)
+        val icd10Coding = coding[ICD10GM](codingsBySystem)
+ 
+        lazy val alphaConcept =
+          alphaCoding.flatMap(concept(_))
+           .orElse {
+             val orphaMatches =
+               orphaCoding.map(c => alphaIdSE.latest.concepts.filter(_.orphaCode.exists(_ == c.code)))
+            
+             val icd10Matches =
+                icd10Coding.map(
+                  icd10 => alphaIdSE.latest.concepts.filter(c => c.primaryCode1.exists(_ == icd10.code) || c.primaryCode2.exists(_ == icd10.code))
+                )
+
+             val candidates = (orphaMatches,icd10Matches) match { 
+               case (Some(a1s),Some(a2s)) => Some(a1s intersect a2s)
+               case (orphas @ Some(_),None) => orphas
+               case (None, icd10s @ Some(_)) => icd10s
+               case _ => None
+             }
+
+             candidates.collect { 
+               case matches if matches.size == 1 => matches.head
+             }
+           }
+       
+        lazy val orphaConcept =
+          orphaCoding.flatMap(concept(_))
+            .orElse(
+              alphaConcept.flatMap(
+                _.orphaCode.map(code => orphanet.latest.concepts.filter(_.code == code))
+                 .collect { case matches if matches.size == 1 => matches.head }
+              )
+            )
+       
+        lazy val icd10Concept =
+          icd10Coding.flatMap(concept(_))
+            .orElse(
+              alphaConcept.flatMap(c => c.primaryCode1.orElse(c.primaryCode2))
+                .flatMap(icd10gm.latest.concept)
+            )
+            .orElse(
+              orphaConcept.map(_.icd10Codes.toList)
+                .flatMap {
+                  case code :: Nil => icd10gm.latest.concept(code)
+                  case _           => None
+                }
+            )
+       
+        NonEmptyList.fromListUnsafe(
+          alphaCoding.orElse(alphaConcept.map(_.toCoding)).map(Coding.widen[AlphaIDSE,RDDiagnosis.Systems](_)).toList ++
+          orphaCoding.orElse(orphaConcept.map(_.toCoding)).map(Coding.widen[Orphanet,RDDiagnosis.Systems](_)) ++
+          icd10Coding.orElse(icd10Concept.map(_.toCoding)).map(Coding.widen[ICD10GM,RDDiagnosis.Systems](_))
+        )
+
+     } else codings
+  }
+
   protected implicit val diagnosisMapping: RDPatientRecord => RDCase.Diagnosis =
     record =>
       RDCase.Diagnosis(
@@ -76,7 +173,12 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
           .maxOption
           .getOrElse(RDDiagnosis.VerificationStatus.Unconfirmed)
           .mapTo[Diagnosis.Status.Value],
-        record.diagnoses.flatMap(_.codes),
+        record.diagnoses.flatMap(
+          diagnosis => diagnosis.codes match { 
+            case codings if codings.toList.groupBy(_.system).size == 3 => codings
+            case codings => codings.complete
+          }
+        ),
         Option.when(record.diagnoses.exists(_.missingCodeReason.isDefined))(true),
         record.gmfcsStatus.flatMap(_.minByOption(_.effectiveDate)).map(_.value.code)
       )
