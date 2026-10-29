@@ -164,7 +164,6 @@ trait MTBMappings extends Mappings[MTBPatientRecord,OncologySubmission]
   }
 
 
-
   protected implicit val statusReason: MTBTherapy.StatusReason.Value => TerminationReason.Value = {
 
     import MTBTherapy.StatusReason._

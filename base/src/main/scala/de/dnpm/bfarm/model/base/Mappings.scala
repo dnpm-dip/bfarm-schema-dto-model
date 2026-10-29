@@ -90,7 +90,6 @@ trait Mappings[RecordType <: PatientRecord,UseCaseSubmission <: de.dnpm.bfarm.mo
     
       import Metadata._
 
-
       implicit val consentProvisionType: mvh.Consent.Provision.Type.Value => MVConsent.Scope.Type.Value =
         Map(
           mvh.Consent.Provision.Type.Permit -> MVConsent.Scope.Type.Permit,
