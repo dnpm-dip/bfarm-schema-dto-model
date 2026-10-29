@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.7](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.6...dnpm-bfarm-model-oncology-v1.0.7) (2026-10-29)
+
+
+### Bug Fixes
+
+* **base:** Dummy commit to trigger release ([b4e2486](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/b4e2486fc68b532fa2886ca9a9816aab00692602))
+* **oncology:** Dummy commit to trigger release ([b4e2486](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/b4e2486fc68b532fa2886ca9a9816aab00692602))
+* **rare_disease:** Dummy commit to trigger release ([b4e2486](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/b4e2486fc68b532fa2886ca9a9816aab00692602))
+
 ## [1.0.6](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-oncology-v1.0.5...dnpm-bfarm-model-oncology-v1.0.6) (2026-09-25)
 
 
