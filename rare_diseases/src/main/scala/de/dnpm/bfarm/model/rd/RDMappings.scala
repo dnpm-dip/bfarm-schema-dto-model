@@ -283,7 +283,6 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
       SegregationAnalysis
     }
 
-
     implicit val localizationMapping: BaseVariant.Localization.Value => Coding[Localization.Value] =
       Map(
         BaseVariant.Localization.CodingRegion     -> Localization.CodingRegion,
