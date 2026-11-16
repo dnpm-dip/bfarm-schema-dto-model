@@ -68,8 +68,9 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
         record.diagnoses
           .toList
           .flatMap(_.familyControlLevel.map(_.code.enumValue))
-          .max
-          .mapTo[Diagnosis.Extent.Value],
+          .maxOption
+          .map(_.mapTo[Diagnosis.Extent.Value])
+          .getOrElse(Diagnosis.Extent.SingleGenome), // Workaround: Value is required but would not be defined on cases without sequencing, so default needed
         performedSequencingType(record),
         record.diagnoses.toList
           .map(_.verificationStatus.code.enumValue)  
