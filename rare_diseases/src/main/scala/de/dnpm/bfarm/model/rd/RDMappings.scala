@@ -466,23 +466,22 @@ trait RDMappings extends Mappings[RDPatientRecord,RDSubmission]
   implicit val useCaseSubmission: mvh.Submission[RDPatientRecord] => RDSubmission = {
     submission =>
 
-    val therapyBoardPlans =
-      submission.record.carePlans.toList match {
-        case carePlans if carePlans.forall(_.boardType.isDefined) =>
-          carePlans.filter(_.boardType.exists(_.code.enumValue == CarePlan.BoardType.TherapyBoard))
-
-        // In case CarePlan.boardType is not consistently used,
-        // assume that the chronologically first CarePlan is the indication board plan, so drop it
+      val therapyBoardPlans = submission.record.getCarePlans match {
+        // If attribute CarePlan.boardType is used at all, assume that at least indication board plans are explicitly marked as such.
+        case carePlans if carePlans.exists(_.boardType.isDefined) =>
+          carePlans.filterNot(_.boardType.exists(_.code.enumValue == CarePlan.BoardType.IndicationBoard))
+      
+        // Else assume the first by date is
         case carePlans => carePlans.sortBy(_.issuedOn).drop(1)
-      }        
-
-    RDSubmission(
-      submission.mapTo[Metadata],
-      submission.record.mapTo[RDCase],
-      submission.record.ngsReports.map(_.mapTo[RDMolecular]),
-      therapyBoardPlans.maxByOption(_.issuedOn).map(_.mapTo[RDPlan]),
-      submission.record.mapTo[Option[RDFollowUps]]
-    )
+      }
+      
+      RDSubmission(
+        submission.mapTo[Metadata],
+        submission.record.mapTo[RDCase],
+        submission.record.ngsReports.map(_.mapTo[RDMolecular]),
+        therapyBoardPlans.maxByOption(_.issuedOn).map(_.mapTo[RDPlan]),
+        submission.record.mapTo[Option[RDFollowUps]]
+      )
   }
 
 }
