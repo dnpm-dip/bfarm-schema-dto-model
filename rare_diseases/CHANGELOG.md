@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.7](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-rare-disease-v1.0.6...dnpm-bfarm-model-rare-disease-v1.0.7) (2026-11-19)
+
+
+### Bug Fixes
+
+* Added safe handling of RDCase.diagnosticExtent for submissions without sequencing ([#21](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/21)) ([cb929ff](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/cb929fff22b39e5c63fa7b3f3dd8951949ef2711))
+* RDPlan is now mapped only when at least one therapy board plan occurs ([#22](https://github.com/dnpm-dip/bfarm-schema-dto-model/issues/22)) ([0e49f89](https://github.com/dnpm-dip/bfarm-schema-dto-model/commit/0e49f895de431682703a8cce701fefb01ab0325d))
+
 ## [1.0.6](https://github.com/dnpm-dip/bfarm-schema-dto-model/compare/dnpm-bfarm-model-rare-disease-v1.0.5...dnpm-bfarm-model-rare-disease-v1.0.6) (2026-10-29)
 
 
